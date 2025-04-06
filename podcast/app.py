@@ -81,8 +81,9 @@ def add_episode(title, audio_file, description="", file_path=""):
         item_guid = ET.SubElement(item, "guid", isPermaLink="false")
         item_guid.text = str(uuid.uuid4())
         
+        # Updated URL to use your static deployment
         item_enclosure = ET.SubElement(item, "enclosure", 
-                                       url=f"https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/podcast/{file_path}",
+                                       url=f"https://static.rjuro.com/podcast/podcast/{file_path}",
                                        length=str(os.path.getsize(f"podcast/{file_path}")),
                                        type="audio/mpeg")
         
@@ -148,20 +149,24 @@ if st.session_state.rss_initialized or os.path.exists("podcast/feed.xml"):
 
 # GitHub setup instructions
 st.divider()
-st.subheader("GitHub Deployment Instructions")
+st.subheader("Static Deployment Information")
 st.markdown("""
-1. Create a new GitHub repository
-2. Push the 'podcast' directory to your repository:
-```bash
-git init
-git add podcast/
-git commit -m "Add podcast files"
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-git push -u origin main
-```
-3. Enable GitHub Pages in your repository settings to serve the files
-4. Your podcast RSS feed will be available at: `https://YOUR_USERNAME.github.io/YOUR_REPO/podcast/feed.xml`
-5. You can use this URL in podcast apps that support private RSS feeds
+Your podcast files are being deployed to a static site:
+
+1. Audio files are uploaded to: `https://static.rjuro.com/podcast/podcast/`
+2. Your podcast RSS feed will be available at: `https://static.rjuro.com/podcast/podcast/feed.xml`
+3. You can use this RSS feed URL in podcast apps that support private RSS feeds
+""")
+
+# Optional: Automatic deployment section
+st.subheader("Advanced: Automatic Deployment")
+st.markdown("""
+To automatically deploy changes to your static site, you could:
+1. Set up a CI/CD pipeline with your hosting provider
+2. Configure automatic file syncing to your static hosting
+3. Add webhooks to trigger deployments after updates
+
+This is left as an enhancement for simplicity, but can be added if needed.
 """)
 
 # Optional: GitHub authentication and auto-push
