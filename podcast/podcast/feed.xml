@@ -4,7 +4,11 @@
   
   
   
+  
+  
   <channel>
+    
+    
     
     
     
@@ -14,7 +18,11 @@
     
     
     
+    
+    
     <description>A private podcast created with Streamlit</description>
+    
+    
     
     
     
@@ -24,42 +32,83 @@
     
     
     
+    
+    
     <link>https://example.com/podcast</link>
+    
     
     
   
     
+    
     <item>
+      
+      
       
       
       <title>transition</title>
       
       
+      
+      
       <description>test</description>
+      
+      
       
       
       <pubDate>Sun, 06 Apr 2025 11:54:43 +0000</pubDate>
       
       
+      
+      
       <guid isPermaLink="false">45f7f22c-f36f-4d1a-b7f3-6a23584a5309</guid>
       
       
+      
+      
       <enclosure url="https://static.rjuro.com/podcast/podcast/TFS-D-25-02249_reviewer_audio.mp3" length="1698429" type="audio/mpeg"/>
+      
+      
+    
+    
+    </item>
+    
+    
+  
+    
+    <item>
+      
+      
+      <title>refs</title>
+      
+      
+      <description>refs</description>
+      
+      
+      <pubDate>Sun, 06 Apr 2025 12:00:34 +0000</pubDate>
+      
+      
+      <guid isPermaLink="false">88d99fdd-940d-4993-b8a9-02b51da3fb09</guid>
+      
+      
+      <enclosure url="https://static.rjuro.com/podcast/podcast/2022.lrec-1.363_overview-4_audio_(1).mp3" length="1522077" type="audio/mpeg"/>
       
     
     </item>
     
   
     <item>
-      <title>refs</title>
-      <description>refs</description>
-      <pubDate>Sun, 06 Apr 2025 12:00:34 +0000</pubDate>
-      <guid isPermaLink="false">88d99fdd-940d-4993-b8a9-02b51da3fb09</guid>
-      <enclosure url="https://static.rjuro.com/podcast/podcast/2022.lrec-1.363_overview-4_audio_(1).mp3" length="1522077" type="audio/mpeg"/>
+      <title>test</title>
+      <description>test </description>
+      <pubDate>Sun, 06 Apr 2025 12:10:32 +0000</pubDate>
+      <guid isPermaLink="false">65d65f7b-0199-48f3-bb4c-404560f9747a</guid>
+      <enclosure url="https://static.rjuro.com/podcast/podcast/d62958ca-5c7c-4016-87e1-0e98c1c36716.mp3" length="1885533" type="audio/mpeg"/>
     </item>
   </channel>
   
   
+  
+
 
 
 </rss>

@@ -4,15 +4,36 @@ import datetime
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import uuid
-import shutil
+import qrcode
+from io import BytesIO
 
 # App title and description
 st.title("Simple Podcast RSS Generator")
 st.write("Upload your podcast episodes and generate an RSS feed")
 
+# Set your feed URL here
+FEED_URL = "https://static.rjuro.com/podcast/podcast/feed.xml"
+
 # Initialize session state variables
 if 'rss_initialized' not in st.session_state:
     st.session_state.rss_initialized = False
+
+# Function to create QR code
+def generate_qr_code(url):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to bytes
+    buffered = BytesIO()
+    img.save(buffered)
+    return buffered.getvalue()
 
 # Function to create initial RSS structure
 def initialize_rss():
@@ -48,11 +69,146 @@ def initialize_rss():
             f.write(xml_str)
         
         st.success("Initialized new RSS feed")
+        
+        # Also create a subscription page
+        create_subscription_page()
     else:
         st.success("Using existing RSS feed")
     
     st.session_state.rss_initialized = True
     return True
+
+# Function to create subscription page
+def create_subscription_page():
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe to My Podcast</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+        h1 {{
+            text-align: center;
+            margin-bottom: 30px;
+        }}
+        .subscribe-buttons {{
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }}
+        .subscribe-button {{
+            display: block;
+            background-color: #4a86e8;
+            color: white;
+            padding: 14px 20px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }}
+        .subscribe-button:hover {{
+            background-color: #3a76d8;
+        }}
+        .subscribe-button.apple {{
+            background-color: #8c2df4;
+        }}
+        .subscribe-button.apple:hover {{
+            background-color: #7b1bd3;
+        }}
+        .subscribe-button.overcast {{
+            background-color: #fc7e0f;
+        }}
+        .subscribe-button.overcast:hover {{
+            background-color: #e67109;
+        }}
+        .subscribe-button.pocketcasts {{
+            background-color: #f43e37;
+        }}
+        .subscribe-button.pocketcasts:hover {{
+            background-color: #e62d26;
+        }}
+        .direct-link {{
+            margin-top: 30px;
+            text-align: center;
+        }}
+        .qr-section {{
+            margin-top: 40px;
+            text-align: center;
+        }}
+        .qr-code {{
+            max-width: 200px;
+            margin: 0 auto;
+            display: block;
+        }}
+    </style>
+</head>
+<body>
+    <h1>Subscribe to My Podcast</h1>
+    
+    <div class="subscribe-buttons">
+        <a href="pcast://{FEED_URL.replace('https://', '')}" class="subscribe-button apple">
+            Subscribe with Apple Podcasts
+        </a>
+        
+        <a href="overcast://x-callback-url/add?url={FEED_URL}" class="subscribe-button overcast">
+            Subscribe with Overcast
+        </a>
+        
+        <a href="pktc://subscribe/{FEED_URL}" class="subscribe-button pocketcasts">
+            Subscribe with Pocket Casts
+        </a>
+        
+        <a href="castro://subscribe/{FEED_URL}" class="subscribe-button">
+            Subscribe with Castro
+        </a>
+        
+        <a href="{FEED_URL}" class="subscribe-button">
+            Subscribe with Other Podcast Apps
+        </a>
+    </div>
+    
+    <div class="direct-link">
+        <p>Or copy this RSS feed URL:</p>
+        <code>{FEED_URL}</code>
+    </div>
+    
+    <div class="qr-section">
+        <p>Scan this QR code with your phone:</p>
+        <img src="qrcode.png" alt="QR Code for Podcast Feed" class="qr-code">
+    </div>
+    
+    <script>
+        // Detect platform and highlight appropriate button
+        document.addEventListener('DOMContentLoaded', function() {{
+            const platform = navigator.platform.toLowerCase();
+            if (platform.includes('mac') || platform.includes('iphone') || platform.includes('ipad')) {{
+                document.querySelector('.subscribe-button.apple').style.boxShadow = '0 0 10px #8c2df4';
+            }}
+        }});
+    </script>
+</body>
+</html>
+"""
+    # Save the HTML file
+    with open("podcast/subscribe.html", "w") as f:
+        f.write(html_content)
+    
+    # Generate and save QR code
+    qr_data = generate_qr_code(FEED_URL)
+    with open("podcast/qrcode.png", "wb") as f:
+        f.write(qr_data)
+    
+    st.success("Created subscription page")
 
 # Function to add an episode to the RSS feed
 def add_episode(title, audio_file, description="", file_path=""):
@@ -81,9 +237,11 @@ def add_episode(title, audio_file, description="", file_path=""):
         item_guid = ET.SubElement(item, "guid", isPermaLink="false")
         item_guid.text = str(uuid.uuid4())
         
-        # Updated URL to use your static deployment
+        # Construct file URL based on your domain
+        file_url = f"{FEED_URL.replace('feed.xml', '')}{file_path}"
+        
         item_enclosure = ET.SubElement(item, "enclosure", 
-                                       url=f"https://static.rjuro.com/podcast/podcast/{file_path}",
+                                       url=file_url,
                                        length=str(os.path.getsize(f"podcast/{file_path}")),
                                        type="audio/mpeg")
         
@@ -147,35 +305,43 @@ if st.session_state.rss_initialized or os.path.exists("podcast/feed.xml"):
             mime="application/xml"
         )
 
+# Subscription information
+st.divider()
+st.subheader("Podcast Subscription Links")
+
+if os.path.exists("podcast/subscribe.html"):
+    st.success("Subscription page created at podcast/subscribe.html")
+    
+    # Display QR code if available
+    if os.path.exists("podcast/qrcode.png"):
+        st.image("podcast/qrcode.png", width=200, caption="Scan this QR code to subscribe")
+else:
+    if st.button("Create Subscription Page"):
+        create_subscription_page()
+
+st.markdown(f"""
+### Direct Subscription Links
+
+- **Apple Podcasts**: `pcast://{FEED_URL.replace('https://', '')}`
+- **Overcast**: `overcast://x-callback-url/add?url={FEED_URL}`
+- **Pocket Casts**: `pktc://subscribe/{FEED_URL}`
+- **Castro**: `castro://subscribe/{FEED_URL}`
+- **Direct RSS URL**: `{FEED_URL}`
+""")
+
 # GitHub setup instructions
 st.divider()
-st.subheader("Static Deployment Information")
+st.subheader("GitHub Deployment Instructions")
 st.markdown("""
-Your podcast files are being deployed to a static site:
-
-1. Audio files are uploaded to: `https://static.rjuro.com/podcast/podcast/`
-2. Your podcast RSS feed will be available at: `https://static.rjuro.com/podcast/podcast/feed.xml`
-3. You can use this RSS feed URL in podcast apps that support private RSS feeds
-""")
-
-# Optional: Automatic deployment section
-st.subheader("Advanced: Automatic Deployment")
-st.markdown("""
-To automatically deploy changes to your static site, you could:
-1. Set up a CI/CD pipeline with your hosting provider
-2. Configure automatic file syncing to your static hosting
-3. Add webhooks to trigger deployments after updates
-
-This is left as an enhancement for simplicity, but can be added if needed.
-""")
-
-# Optional: GitHub authentication and auto-push
-st.subheader("Advanced: Automatic GitHub Push")
-st.markdown("""
-To automatically push changes to GitHub, you would need to:
-1. Set up GitHub credentials
-2. Install the `gitpython` package
-3. Add code to push changes after each update
-
-This is left as an enhancement for simplicity, but can be added if needed.
+1. Create a new GitHub repository
+2. Push the 'podcast' directory to your repository:
+```bash
+git init
+git add podcast/
+git commit -m "Add podcast files"
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git push -u origin main
+```
+3. Enable GitHub Pages in your repository settings to serve the files
+4. Share the subscription page URL with your listeners
 """)
